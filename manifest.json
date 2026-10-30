@@ -1,0 +1,31 @@
+{
+  "name": "Bhajan Marg Counter",
+  "short_name": "Bhajan Marg Counter",
+  "description": "सनातन धर्म का पहला ऑनलाइन नाम बैंक - 108 डिजिटल माला, भक्ति खाता, पासबुक व CIBIL स्कोर।",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a0601",
+  "theme_color": "#1a0601",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

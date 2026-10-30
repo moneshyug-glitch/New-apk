@@ -1,0 +1,123 @@
+/* ========================================== */
+/* 🌟 RIGHT SIDEBAR STYLES                    */
+/* ========================================== */
+
+/* बैकग्राउंड पर्दा (Backdrop) */
+#sidebarBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+#sidebarBackdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* दाहिना साइडबार ड्रावर (डार्क थीम - डिफ़ॉल्ट) */
+#rightSidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 84vw;
+  max-width: 325px;
+  background: #1f0a03;
+  color: #fef3c7;
+  border-left: 1px solid rgba(212, 163, 55, 0.3);
+  z-index: 9999;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease, color 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+  box-shadow: -6px 0 24px rgba(0, 0, 0, 0.6);
+  box-sizing: border-box;
+}
+
+#rightSidebar.active {
+  transform: translateX(0);
+}
+
+/* साइडबार बॉक्स कार्ड्स */
+.sidebar-box {
+  background: rgba(43, 14, 4, 0.6);
+  border: 1px solid rgba(212, 163, 55, 0.2);
+  border-radius: 12px;
+  padding: 10px 12px;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+}
+
+.sidebar-box:active {
+  transform: scale(0.98);
+}
+
+/* ========================================== */
+/* ☀️ लाइट थीम फिक्स (HIGH CONTRAST & CLEAN)  */
+/* ========================================== */
+
+body.light-theme #rightSidebar {
+  background: #fffdf8 !important;
+  color: #381b0a !important;
+  border-left: 1px solid rgba(180, 83, 9, 0.25) !important;
+  box-shadow: -6px 0 24px rgba(120, 53, 15, 0.12) !important;
+}
+
+/* लाइट थीम में कार्ड्स का रंग */
+body.light-theme #rightSidebar .sidebar-box {
+  background: #fff9ed !important;
+  border: 1px solid rgba(180, 83, 9, 0.22) !important;
+  color: #381b0a !important;
+}
+
+/* लाइट थीम में हेडर व टेक्स्ट का रंग */
+body.light-theme #rightSidebar h3,
+body.light-theme #rightSidebar h4 {
+  color: #78350f !important;
+}
+
+body.light-theme #rightSidebar .text-amber-200,
+body.light-theme #rightSidebar .text-amber-300 {
+  color: #78350f !important;
+}
+
+body.light-theme #rightSidebar .text-amber-400,
+body.light-theme #rightSidebar .text-amber-400\/70,
+body.light-theme #rightSidebar .text-amber-400\/80 {
+  color: #92400e !important;
+  font-weight: 600 !important;
+}
+
+/* 🎯 मुख्य फिक्स: लाइट थीम में सभी बैज (थीम, नोटीफिकेशन, भाषा, ध्वनि, कंपन) */
+body.light-theme #rightSidebar .bg-amber-950,
+body.light-theme #rightSidebar #sidebarThemeText,
+body.light-theme #rightSidebar #sidebarNotifText,
+body.light-theme #rightSidebar #sidebarLangText,
+body.light-theme #rightSidebar #sidebarSoundStatus,
+body.light-theme #rightSidebar #sidebarVibStatus {
+  background-color: #fef3c7 !important;           /* हल्का क्रीम/गोल्डन बैकग्राउंड */
+  color: #78350f !important;                      /* गहरा स्पष्ट ब्राउन टेक्स्ट */
+  border: 1px solid rgba(217, 119, 6, 0.45) !important; /* स्पष्ट बॉर्डर */
+  font-weight: 700 !important;
+  box-shadow: 0 1px 2px rgba(120, 53, 15, 0.08);
+}
+
+/* बंद करने का बटन (X) लाइट थीम में */
+body.light-theme #rightSidebar button.bg-amber-950\/80 {
+  background-color: #fef3c7 !important;
+  border-color: rgba(180, 83, 9, 0.3) !important;
+  color: #78350f !important;
+}
+
+/* विभाजक रेखाएँ (Borders) */
+body.light-theme #rightSidebar .border-amber-800\/40,
+body.light-theme #rightSidebar .border-amber-800\/30 {
+  border-color: rgba(180, 83, 9, 0.15) !important;
+}

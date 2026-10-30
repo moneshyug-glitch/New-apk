@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  
+  <title data-i18n="app_title">Bhajan Marg Bank | 108 Digital Mala & Devotee Mobile App</title>
+  <meta name="description" content="Sanatan Dharma's First Online Naam Bank - 108 Digital Mala, Spiritual Account, Passbook & Bhakti Meter." />
+  <meta name="theme-color" content="#1a0601" id="metaThemeColor" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="application-name" content="Bhajan Marg Counter" />
+  <meta name="apple-mobile-web-app-title" content="Bhajan Marg Counter" />
+
+  <!-- PWA ऐप लोगो व Favicons -->
+  <link rel="icon" type="image/png" sizes="192x192" href="logo.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="logo.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="logo.png" />
+  <link rel="apple-touch-icon" href="logo.png" />
+
+  <!-- Web App Manifest -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- Tailwind CSS & Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Rozha+One&family=Yatra+One&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Razorpay Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+  <!-- Google Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-installations-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
+
+  <!-- ऐप मुख्य CSS एवं साइडबार CSS -->
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="sidebar.css" />
+</head>
+<body class="text-amber-100 flex flex-col justify-between select-none font-sans">
+
+  <!-- ======================================================== -->
+  <!-- 0. कस्टम राधा-कृष्ण स्प्लैश स्क्रीन (DIVINE SPLASH SCREEN) -->
+  <!-- ======================================================== -->
+  <div id="divineSplashScreen" style="position: fixed; inset: 0; z-index: 99999; background: #fffdf5; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: opacity 0.4s ease-out, visibility 0.4s ease-out; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
+    <img src="splash-radha-krishna.png" alt="Welcome to Bhajan Marg Bank" style="max-height: 95vh; width: auto; object-fit: contain;" />
+  </div>
+
+  <!-- 🎯 स्प्लैश स्क्रीन इंस्टेंट हैंडलर (ऑफ़लाइन होने पर भी 100% तुरंत काम करेगा) -->
+  <script>
+    (function() {
+      const splash = document.getElementById('divineSplashScreen');
+      if (!splash) return;
+
+      let isDismissed = false;
+      function dismissSplash() {
+        if (isDismissed) return;
+        isDismissed = true;
+
+        if (typeof initAudio === 'function') {
+          try { initAudio(); } catch (e) {}
+        }
+
+        splash.style.pointerEvents = 'none';
+        splash.style.opacity = '0';
+        splash.style.visibility = 'hidden';
+
+        setTimeout(() => {
+          if (splash && splash.parentNode) {
+            splash.parentNode.removeChild(splash);
+          }
+        }, 450);
+      }
+
+      // टैप या क्लिक करते ही तुरंत अंदर प्रवेश करें
+      splash.addEventListener('click', dismissSplash);
+      splash.addEventListener('touchstart', dismissSplash, { passive: true });
+
+      // अधिकतम 1.5 सेकंड में ऑटो-एग्जिट (चाहे ऑनलाइन हो या पूर्ण ऑफ़लाइन)
+      setTimeout(dismissSplash, 1500);
+      window.addEventListener('load', () => setTimeout(dismissSplash, 600), { once: true });
+    })();
+  </script>
+
+  <!-- ======================================================== -->
+  <!-- 1. टॉप मोबाइल स्टेटस एवं ऐप हेडर (Sticky Header) -->
+  <!-- ======================================================== -->
+  <header class="w-full max-w-md mx-auto sticky top-0 z-40 card-glass border-b border-amber-600/30 px-3 py-2.5 shadow-xl">
+    <div class="flex items-center justify-between gap-1.5">
+      
+      <!-- ब्रांड लोगो व साधक का नाम -->
+      <div class="flex items-center gap-2 min-w-0">
+        <div class="w-8 h-8 rounded-full overflow-hidden border border-amber-400/60 shadow flex-shrink-0 flex items-center justify-center bg-amber-950">
+          <img src="logo.png" alt="भजन मार्ग बैंक" class="w-full h-full object-cover" />
+        </div>
+        <div class="min-w-0">
+          <h1 class="font-heading text-xs sm:text-sm text-amber-300 leading-tight whitespace-nowrap tracking-wide" data-i18n="app_title">Bhajan Marg Bank</h1>
+          <div class="flex items-center gap-1.5">
+            <p class="text-[9.5px] text-amber-200/80 font-sans font-medium truncate max-w-[110px]" id="sadhakNameDisplay" data-i18n="guest_sadhak">
+              Guest Devotee
+            </p>
+            <span id="networkStatusBadge" class="text-[8px] font-mono px-1.5 py-0.2 rounded-full border bg-emerald-950/80 border-emerald-500/40 text-emerald-300 whitespace-nowrap" data-i18n="status_online">
+              🟢 Online
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- हेडर दायाँ हिस्सा: AI वॉइस बटन + दाहिना साइडबार मेनू बटन -->
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <!-- AI Voice Button -->
+        <button id="voiceToggleBtn" onclick="toggleVoiceRecognition()" data-i18n-title="voice_ai_title" title="Japa with AI Voice" class="w-8 h-8 rounded-full bg-amber-950/80 border border-amber-600/40 text-amber-300 flex items-center justify-center text-xs relative transition active:scale-95">
+          <i data-lucide="mic" class="w-4 h-4" id="voiceMicIcon"></i>
+          <span class="absolute -top-1 -right-1 text-[6.5px] bg-cyan-400 text-black font-black rounded-full px-1">AI</span>
+        </button>
+
+        <!-- ☰ दाहिना साइडबार मेनू बटन -->
+        <button id="sidebarToggleBtn" onclick="openRightSidebar()" data-i18n-title="menu_settings_title" title="Open Menu & Settings" class="w-8 h-8 rounded-full gold-foil text-amber-950 flex items-center justify-center shadow-lg transition active:scale-90 border border-amber-200">
+          <i data-lucide="menu" class="w-4 h-4 text-amber-950 stroke-[2.5]"></i>
+        </button>
+
+        <!-- बैकग्राउंड सुरक्षा कंटेनर -->
+        <div id="headerAuthBtnContainer" class="hidden"></div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- 2. मुख्य कंटेनर (Screens) -->
+  <!-- ======================================================== -->
+  <main class="w-full max-w-md mx-auto flex-1 flex flex-col px-3 py-2 min-h-[calc(100dvh-125px)]">
+
+    <!-- -------------------------------------------------------- -->
+    <!-- TAB 1: जप माला स्क्रीन (MALA COUNTER SCREEN) -->
+    <!-- -------------------------------------------------------- -->
+    <div id="screen-mala" class="app-screen flex-1 flex flex-col justify-between py-1 gap-2">
+      
+      <!-- शीर्ष अनुभाग: A/C स्ट्रिप एवं दोनों बैलेंस कार्ड्स -->
+      <div class="space-y-2 flex-shrink-0">
+        <!-- मिनी खाता स्थिति बार -->
+        <div class="card-glass-subtle px-3 py-1.5 rounded-xl flex items-center justify-between text-xs shadow border border-amber-500/30">
+          <div class="flex items-center gap-1.5 font-mono text-[11px]">
+            <span id="accStatusDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="text-amber-400 text-[10px] font-bold" data-i18n="ac_label">A/C:</span>
+            <span id="dashAccNoDisplay" class="text-amber-200 font-bold">108-XXXXXX</span>
+          </div>
+          <div class="flex items-center gap-1 text-[11px] text-amber-300 font-medium">
+            <span>📿</span>
+            <span id="currentIshtName" data-i18n="default_isht">Shri Radha Naam</span>
+          </div>
+        </div>
+
+        <!-- 🎯 लाइव काउंटर्स -->
+        <div class="grid grid-cols-2 gap-2 w-full">
+          <div class="card-glass rounded-2xl p-2.5 border-l-4 border-amber-400 shadow-lg flex flex-col justify-between">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[11.5px] sm:text-xs uppercase font-black text-amber-400 tracking-wide" data-i18n="today_japa_title">🌅 TODAY'S JAPA</span>
+              <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-amber-950/90 border border-amber-500/40 text-amber-300 flex-shrink-0">
+                <span id="todayMalaCount">0</span> <span data-i18n="unit_mala">Mala</span>
+              </span>
+            </div>
+            <div class="mt-1">
+              <h2 id="todayJaapCount" class="text-2xl font-black font-mono text-amber-200 leading-tight">0</h2>
+              <span class="text-[8.5px] text-amber-400/80 font-semibold block mt-0.5" data-i18n="today_added_sub">Deposited today</span>
+            </div>
+          </div>
+
+          <div class="card-glass rounded-2xl p-2.5 border-l-4 border-emerald-400 shadow-lg flex flex-col justify-between">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[11.5px] sm:text-xs uppercase font-black text-emerald-400 tracking-wide" data-i18n="total_balance_title">🏛️ TOTAL JAPA</span>
+              <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 flex-shrink-0">
+                <span id="totalMalaCount">0</span> <span data-i18n="unit_mala">Mala</span>
+              </span>
+            </div>
+            <div class="mt-1">
+              <h2 id="totalBankBalance" class="text-2xl font-black font-mono text-emerald-300 leading-tight">0</h2>
+              <span class="text-[8.5px] text-emerald-400/80 font-semibold block mt-0.5" data-i18n="total_balance_sub">Accumulated holy Japa</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- मध्य अनुभाग: 108 डिजिटल माला काउंटर -->
+      <div id="malaTouchArea" class="flex-1 flex flex-col items-center justify-center my-auto py-4 sm:py-6 w-full cursor-pointer select-none active:scale-[0.98] transition-transform duration-75" style="touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
+        
+        <div id="beadCircle" class="w-[62vw] h-[62vw] max-w-[260px] max-h-[260px] min-w-[210px] min-h-[210px] rounded-full conic-bead p-3 sm:p-3.5 shadow-2xl flex items-center justify-center transition-all duration-150 pointer-events-none" style="--p: 0%;">
+          
+          <div id="tapCounterBtn" class="w-full h-full rounded-full gold-foil text-amber-950 flex flex-col items-center justify-center border-4 border-amber-200 shadow-2xl relative overflow-hidden pointer-events-none" aria-label="Naam Jap Counter Tap Button">
+            
+            <div class="absolute -right-4 -bottom-4 text-7xl opacity-15 pointer-events-none">🦚</div>
+
+            <span class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-amber-950/80" data-i18n="tap_here">
+              JAPA HERE (TAP)
+            </span>
+
+            <span id="sessionCounter" class="text-5xl sm:text-6xl font-black font-mono my-0.5 tracking-tight text-amber-950 drop-shadow">
+              0
+            </span>
+
+            <div class="mt-1 flex items-center gap-1.5 bg-amber-950/20 px-3 py-0.5 sm:py-1 rounded-full text-amber-950 font-bold text-[11px] sm:text-xs">
+              <span data-i18n="mala_progress">Mala Progress:</span>
+              <span id="malaCountBadge" class="font-mono text-xs sm:text-sm">0</span>
+              <span>/ 108</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- वर्तमान बैठक सारांश -->
+        <p class="text-xs text-amber-300/80 font-sans text-center mt-3 font-medium pointer-events-none" id="sessionMalaTotalDisplay">
+          Current Session: 0 Mala completed
+        </p>
+      </div>
+
+      <!-- निचला अनुभाग: एक्शन बटन्स व भक्ति मीटर बार -->
+      <div class="space-y-2 flex-shrink-0">
+        <div class="flex gap-2">
+          <button id="depositBtn" onclick="depositSessionToBank(false)" class="flex-1 py-3 px-4 gold-foil text-amber-950 font-extrabold rounded-2xl text-xs sm:text-sm shadow-xl hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-2 border border-amber-200">
+            <i data-lucide="arrow-down-to-dot" class="w-4 h-4 text-amber-950"></i>
+            <span data-i18n="deposit_btn">Deposit to Bank</span>
+          </button>
+
+          <button onclick="resetCurrentSession()" class="py-3 px-4 bg-amber-950/80 hover:bg-amber-900 border border-amber-600/40 text-amber-300 rounded-2xl text-xs flex items-center justify-center gap-1 shadow transition active:scale-95">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            <span data-i18n="reset_btn">Reset</span>
+          </button>
+        </div>
+
+        <div class="card-glass rounded-2xl p-2.5 sm:p-3 border-l-4 border-cyan-400 flex items-center justify-between shadow-lg">
+          <div>
+            <span class="text-[10px] uppercase font-bold text-cyan-300 flex items-center gap-1">
+              <span>🛡️</span> <span data-i18n="cibil_mini_title">Bhakti Meter Score:</span> <span id="cibilScoreMini" class="font-mono text-cyan-200 ml-1">---</span>/900
+            </span>
+            <p class="text-[9px] text-amber-300/70" id="cibilGradeMini" data-i18n="cibil_mini_sub">Spiritual discipline rating</p>
+          </div>
+          <button onclick="triggerCheckCibilScore()" class="px-3 py-1.5 gold-foil text-amber-950 text-[10px] font-bold rounded-xl shadow active:scale-95 transition" data-i18n="btn_check">
+            Check ➔
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- -------------------------------------------------------- -->
+    <!-- TAB 2: मेरी साधना स्क्रीन (MY SADHANA SCREEN) -->
+    <!-- -------------------------------------------------------- -->
+    <div id="screen-account" class="app-screen space-y-3 hidden">
+      
+      <!-- वर्चुअल भक्ति पत्र (Bhakti Patra) -->
+      <div class="bhakti-virtual-card rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-2xl border-2 border-amber-400/50 flex flex-col justify-between h-48 sm:h-52" style="background: linear-gradient(135deg, #3d1704 0%, #170701 100%);">
+        <div class="flex justify-between items-start">
+          <span class="text-[9px] tracking-widest text-amber-400 font-bold uppercase" data-i18n="card_title">Bhakti Patra</span>
+          <span id="cardTierBadge" class="text-[9px] gold-foil text-amber-950 px-2 py-0.5 rounded font-extrabold shadow" data-i18n="card_tier">GOLD TIER</span>
+        </div>
+        <div class="my-2">
+          <p class="text-[9px] text-amber-400/70 uppercase font-mono" data-i18n="card_ac_no">ACCOUNT NUMBER (A/C No)</p>
+          <p class="font-mono text-lg sm:text-xl tracking-widest text-amber-200 font-bold" id="cardAccountNumber">108-XXXXXX</p>
+        </div>
+        <div class="flex justify-between items-end text-xs">
+          <div><p class="text-[9px] text-amber-400/80" data-i18n="card_holder">Devotee Name</p><p class="font-semibold text-amber-200 text-xs sm:text-sm" id="holderDisplayName">Devotee</p></div>
+          <div class="text-right"><p class="text-[9px] text-amber-400/80" data-i18n="card_isht">Ishtadev</p><p class="font-bold text-amber-300 text-xs sm:text-sm" id="holderIshtDisplay">Shri Radha Naam</p></div>
+        </div>
+      </div>
+
+      <!-- 🎯 SAVED JAPA & DEDICATED JAPA CARDS -->
+      <div class="grid grid-cols-2 gap-2">
+        <div class="card-glass rounded-2xl p-3 border-l-4 border-amber-400 shadow">
+          <span class="text-[11.5px] sm:text-xs uppercase font-black text-amber-400 tracking-wide block" data-i18n="savings_ac_title">Saved Japa</span>
+          <h3 id="accScreenTotalBal" class="text-2xl font-black font-mono text-amber-200 mt-0.5">0</h3>
+          <p class="text-[8.5px] text-emerald-400 mt-1 font-semibold" data-i18n="savings_ac_sub">Offered at Ishtadev's Lotus Feet</p>
+        </div>
+
+        <div class="card-glass rounded-2xl p-3 border-l-4 border-rose-500 shadow">
+          <span class="text-[11.5px] sm:text-xs uppercase font-black text-rose-400 tracking-wide block" data-i18n="dedicated_wealth_title">Dedicated Japa</span>
+          <h3 id="accScreenTotalDed" class="text-2xl font-black font-mono text-rose-300 mt-0.5">0</h3>
+          <p class="text-[8.5px] text-rose-300/80 mt-1 font-semibold" data-i18n="dedicated_wealth_sub">For Ancestors / Cow Seva</p>
+        </div>
+      </div>
+
+      <!-- 1. नित्य नियम (Daily Niyam) -->
+      <div class="card-glass rounded-2xl p-3.5 border-l-4 border-emerald-400 shadow-xl space-y-2">
+        <div class="flex justify-between items-center gap-2">
+          <div class="min-w-0">
+            <span class="text-[11.5px] sm:text-xs font-bold text-emerald-300 flex items-center gap-1.5" data-i18n="rd_title">
+              <span>🔄</span> Daily Niyam
+            </span>
+            <p class="text-[9.5px] sm:text-[10px] text-amber-200/80 truncate mt-0.5" id="rdInstallmentDueText">Today's Goal: 16 Mala</p>
+          </div>
+          <span id="rdStatusBadge" class="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border bg-amber-950/90 border-amber-500/40 text-amber-300 whitespace-nowrap flex-shrink-0" data-i18n="rd_status_due">
+            ⏳ Goal Incomplete
+          </span>
+        </div>
+
+        <div class="w-full bg-emerald-950/80 rounded-full h-2 border border-emerald-500/30 overflow-hidden">
+          <div id="rdProgressBar" class="h-full bg-emerald-400 transition-all duration-300" style="width: 0%"></div>
+        </div>
+
+        <div class="flex justify-between items-center pt-0.5 text-[10px]">
+          <span class="text-amber-300/70" id="rdMalaProgressText">Completed today: 0 / 16 Mala</span>
+          <span class="text-emerald-400 font-semibold" data-i18n="rd_boost_hint">Daily Niyam = Bhakti Meter Boost 🚀</span>
+        </div>
+      </div>
+
+      <!-- 2. महा-संकल्प (Maha-Sankalp) -->
+      <div class="card-glass rounded-2xl p-3.5 border-l-4 border-orange-500 shadow-xl space-y-2">
+        <div class="flex justify-between items-center gap-2">
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-[11.5px] sm:text-xs font-bold text-orange-300 flex items-center gap-1" data-i18n="fd_title">
+                <span>🏛️</span> Maha-Sankalp
+              </span>
+              <span class="text-[8px] px-1.5 py-0.2 rounded-full gold-foil text-amber-950 font-bold" data-i18n="fd_bonus_badge">+25% Divine Fruit</span>
+            </div>
+            <h4 class="text-xs font-bold text-amber-100 mt-0.5 truncate" id="goalTitleDisplay" data-i18n="fd_default_goal">1 Lakh Divine Names Sankalp</h4>
+            <p class="text-[9.5px] sm:text-[10px] text-orange-200/80 truncate" id="goalTargetText">Target: 1,00,000 Names | All Names</p>
+          </div>
+          <span class="text-xs font-mono font-bold text-amber-400 whitespace-nowrap flex-shrink-0" id="fdProgressText">0%</span>
+        </div>
+
+        <div class="w-full bg-orange-950/80 rounded-full h-2 border border-orange-500/30 overflow-hidden">
+          <div id="fdProgressBar" class="gold-foil h-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+
+        <div class="flex justify-between items-center pt-1 text-[11px]">
+          <span class="text-amber-300/70" id="fdRemainingText">Remaining: 1,00,000 Names</span>
+          <button onclick="openChangeGoalModal()" class="text-amber-400 underline font-semibold active:scale-95 transition" data-i18n="fd_change_btn">
+            New Sankalp / Change ✎
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. संकटमोचन कृपा सहायता (Sankatmochan Kripa Sahayata) -->
+      <div class="card-glass rounded-2xl p-3.5 border-l-4 border-rose-500 shadow-xl space-y-2">
+        <div class="flex justify-between items-center gap-2">
+          <div class="min-w-0">
+            <span class="text-[11.5px] sm:text-xs font-bold text-rose-300 flex items-center gap-1.5" data-i18n="loan_title">
+              <span>🤝</span> Sankatmochan Kripa Sahayata
+            </span>
+            <p class="text-[9.5px] sm:text-[10px] text-amber-200/80 truncate mt-0.5" data-i18n="loan_sub">Emergency divine advance grace</p>
+          </div>
+          <span id="loanStatusBadge" class="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border bg-emerald-950/90 border-emerald-500/40 text-emerald-300 whitespace-nowrap flex-shrink-0" data-i18n="loan_status_free">
+            Grace Fulfilled ✓
+          </span>
+        </div>
+
+        <div id="noLoanBox" class="space-y-1.5 pt-0.5">
+          <p class="text-[10.5px] text-amber-200/80 leading-relaxed" data-i18n="loan_free_desc">
+            No active grace request currently. During adversity, sickness, or exams, you can request advance grace from Thakurji's Grace Fund.
+          </p>
+          <button onclick="openLoanModal()" class="w-full py-2 bg-rose-950/80 hover:bg-rose-900 border border-rose-500/50 text-rose-200 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow active:scale-95 transition" data-i18n="loan_apply_btn">
+            <span>🤝 Request Kripa Sahayata</span>
+          </button>
+        </div>
+
+        <div id="activeLoanBox" class="space-y-2 hidden pt-0.5">
+          <div class="flex justify-between text-xs font-mono">
+            <span class="text-rose-300 font-bold" id="loanReasonDisplay">For wellbeing of family</span>
+            <span class="text-amber-200 font-bold" id="loanRepaidText">0 / 11,000 Names</span>
+          </div>
+          <div class="w-full bg-rose-950/80 rounded-full h-2 border border-rose-500/40 overflow-hidden">
+            <div id="loanProgressBar" class="h-full bg-rose-400 transition-all duration-300" style="width: 0%"></div>
+          </div>
+          <div class="flex justify-between items-center text-[10px]">
+            <span class="text-amber-300/80" data-i18n="loan_daily_emi_info">Daily Gratitude Japa: 1 Mala (108 names)</span>
+            <span class="text-emerald-400 font-semibold" data-i18n="loan_cibil_boost_info">Daily gratitude Japa boosts Bhakti Meter to 850+!</span>
+          </div>
+
+          <div class="pt-1.5 border-t border-rose-800/40 flex flex-col sm:flex-row gap-1.5">
+            <button onclick="payLoanEmiFromSavings(108)" class="flex-1 py-2 px-2.5 gold-foil text-amber-950 font-bold rounded-xl text-[11px] shadow active:scale-95 transition flex items-center justify-center gap-1" data-i18n="loan_pay_emi_btn">
+              <span>💳 Offer Today's Gratitude Japa from Savings (108 names)</span>
+            </button>
+            <button onclick="payFullLoanFromSavings()" class="py-2 px-2.5 bg-rose-900/90 hover:bg-rose-800 border border-rose-500/50 text-rose-200 font-bold rounded-xl text-[10.5px] shadow active:scale-95 transition" data-i18n="loan_pay_full_btn">
+              <span>Complete Offering ➔</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. संपूर्ण भक्ति मीटर (Bhakti Meter Rating) -->
+      <div class="card-glass rounded-2xl p-4 border-l-4 border-cyan-400 shadow-xl space-y-2">
+        <div class="flex justify-between items-center gap-2">
+          <div class="min-w-0">
+            <span class="text-[11.5px] sm:text-xs font-bold text-cyan-300 flex items-center gap-1.5" data-i18n="cibil_full_title">
+              <span>🛡️</span> Bhakti Meter Rating
+            </span>
+            <p class="text-[9.5px] sm:text-[10px] text-amber-300/70 truncate mt-0.5" data-i18n="cibil_full_sub">Sadhana Discipline Score (300 - 900)</p>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full border border-cyan-500/40 text-cyan-300 bg-cyan-950/60 whitespace-nowrap flex-shrink-0" id="cibilBadgeDisplay" data-i18n="cibil_badge_expected">
+            Pending
+          </span>
+        </div>
+
+        <div class="flex items-baseline justify-between py-1">
+          <div class="flex items-baseline gap-1">
+            <h3 id="cibilScoreDisplay" class="text-3xl font-black font-mono text-cyan-300">---</h3>
+            <span class="text-[10px] text-cyan-400/60 font-mono">/ 900</span>
+          </div>
+          <span id="cibilGradeDisplay" class="text-xs font-medium text-amber-300" data-i18n="cibil_not_checked">Not evaluated</span>
+        </div>
+
+        <button onclick="triggerCheckCibilScore()" class="w-full py-2 px-3 gold-foil text-amber-950 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow active:scale-95 transition" data-i18n="cibil_full_report_btn">
+          <i data-lucide="gauge" class="w-3.5 h-3.5 text-amber-950"></i>
+          <span id="cibilBtnText">View Detailed Bhakti Report ➔</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- -------------------------------------------------------- -->
+    <!-- TAB 3: प्रभु सेवा (SEVA SCREEN) -->
+    <!-- -------------------------------------------------------- -->
+    <div id="screen-services" class="app-screen space-y-3 hidden">
+      
+      <div class="grid grid-cols-3 gap-1.5 card-glass p-1.5 rounded-2xl text-xs">
+        <button onclick="switchServiceSubTab('sub-slip')" id="btn-sub-slip" class="py-2 px-1 rounded-xl font-semibold text-center bg-amber-500/20 text-amber-200 border border-amber-500/40" data-i18n="service_tab_slip">
+          📝 Add Offline Japa
+        </button>
+        <button onclick="switchServiceSubTab('sub-transfer')" id="btn-sub-transfer" class="py-2 px-1 rounded-xl text-amber-300/80 hover:bg-amber-900/30 text-center" data-i18n="service_tab_transfer">
+          🎁 Dedicate Japa
+        </button>
+        <button onclick="switchServiceSubTab('sub-cheque')" id="btn-sub-cheque" class="py-2 px-1 rounded-xl text-amber-300/80 hover:bg-amber-900/30 text-center" data-i18n="service_tab_cheque">
+          📜 Offering Note
+        </button>
+      </div>
+
+      <!-- डायरी जप जोड़ें (Add Offline Japa) -->
+      <div id="sub-slip" class="card-glass rounded-2xl p-4 shadow-xl">
+        <h3 class="font-heading text-amber-300 text-xs sm:text-sm mb-1 flex items-center gap-1.5 font-bold">
+          <span>📝</span> <span data-i18n="slip_heading">Add Offline Japa</span>
+        </h3>
+        <p class="text-[11px] text-amber-200/70 mb-3" data-i18n="slip_sub">If you have performed Japa on beads or written in a notebook, enter the total count directly here.</p>
+        
+        <form id="manualDepositForm" class="space-y-3 text-xs font-sans">
+          <div>
+            <label class="block text-amber-300 mb-1 font-semibold" data-i18n="label_isht_mantra">Isht Mahamantra</label>
+            <select id="mantraType" onchange="toggleManualCustomMantra(this.value)" class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-3 py-2.5 text-xs text-amber-100 outline-none focus:border-amber-400">
+              <option value="श्री राधा नाम">Shri Radha Naam (श्री राधा नाम)</option>
+              <option value="हरे कृष्ण महामंत्र">Hare Krishna Mahamantra (हरे कृष्ण महामंत्र)</option>
+              <option value="श्री सीताराम नाम">Shri Sitaram Naam (श्री सीताराम नाम)</option>
+              <option value="ॐ नमः शिवाय">Om Namah Shivaya (ॐ नमः शिवाय)</option>
+              <option value="CUSTOM">Custom Mantra (Type here)</option>
+            </select>
+            <div id="manualCustomMantraContainer" class="hidden mt-1.5">
+              <input type="text" id="manualCustomMantraInput" placeholder="Enter custom mantra name..." class="w-full bg-amber-950/90 border border-cyan-500/50 rounded-xl px-3 py-1.5 text-xs text-amber-100 outline-none focus:border-cyan-400" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-amber-300 mb-1 font-semibold" data-i18n="label_mala_count">Mala Count</label>
+              <input type="number" id="malaInput" placeholder="e.g. 16" min="1" class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-3 py-2 text-xs text-amber-100" />
+            </div>
+            <div>
+              <label class="block text-amber-300 mb-1 font-semibold" data-i18n="label_direct_count">Total Japa Count</label>
+              <input type="number" id="directCountInput" placeholder="e.g. 1728" min="1" required class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-3 py-2 text-xs text-amber-100 font-mono font-bold" />
+            </div>
+          </div>
+          <button type="submit" class="w-full py-3 gold-foil text-amber-950 font-bold rounded-xl text-xs shadow-xl active:scale-95 transition" data-i18n="btn_submit_slip">
+            ✓ Add to Sacred Account
+          </button>
+        </form>
+      </div>
+
+      <!-- पुण्य अर्पण (Dedicate Japa) -->
+      <div id="sub-transfer" class="card-glass rounded-2xl p-4 shadow-xl hidden">
+        <h3 class="font-heading text-rose-300 text-xs sm:text-sm mb-1 flex items-center gap-1.5 font-bold">
+          <span>🎁</span> <span data-i18n="transfer_heading">Dedicate Holy Japa</span>
+        </h3>
+        <p class="text-[11px] text-amber-200/70 mb-3" data-i18n="transfer_sub">Dedicate the fruits of your accumulated Japa to parents, ancestors, or world welfare.</p>
+        
+        <form id="transferForm" class="space-y-3 text-xs font-sans">
+          <div>
+            <label class="block text-rose-300 mb-1 font-semibold" data-i18n="label_beneficiary">Dedication Purpose / Beneficiary</label>
+            <select id="transferBeneficiary" class="w-full bg-amber-950/80 border border-rose-600/40 rounded-xl px-3 py-2.5 text-xs text-amber-100">
+              <option value="माता-पिता के श्रीचरणों में" data-i18n="ben_parents">For Parents' Longevity & Wellbeing</option>
+              <option value="पितरों की सद्गति हेतु" data-i18n="ben_ancestors">For Ancestors' Peace & Liberation</option>
+              <option value="विश्व शांति एवं गौ सेवा" data-i18n="ben_world">For World Peace & Cow Seva</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-rose-300 mb-1 font-semibold" data-i18n="label_transfer_count">Japa Count to Dedicate</label>
+            <input type="number" id="transferCountInput" placeholder="e.g. 1008" min="1" class="w-full bg-amber-950/80 border border-rose-600/40 rounded-xl px-3 py-2.5 text-xs font-mono text-amber-100" required />
+          </div>
+          <button type="submit" class="w-full py-3 bg-rose-800 text-amber-100 font-bold rounded-xl text-xs shadow-xl active:scale-95 transition" data-i18n="btn_transfer">
+            Dedicate Holy Japa
+          </button>
+        </form>
+      </div>
+
+      <!-- चरण अर्पण पत्र (Offering Note) -->
+      <div id="sub-cheque" class="card-glass rounded-2xl p-4 shadow-xl hidden text-center space-y-3">
+        <div id="chequePrintArea" class="bg-amber-100 text-amber-950 rounded-2xl p-3.5 border-2 border-amber-600 shadow-xl text-left space-y-2">
+          <div class="flex justify-between items-center border-b border-amber-800/30 pb-1">
+            <h4 class="font-heading text-sm text-amber-900 font-bold" data-i18n="app_title">Bhajan Marg Bank</h4>
+            <span class="text-[10px] font-mono" id="chequeDate">--/--/----</span>
+          </div>
+          
+          <p class="text-[11px] font-bold">
+            <span data-i18n="cheque_payee_prefix">Offered at the sacred lotus feet of:</span>
+            <span id="chequePayeeDisplay" class="font-sans text-xs text-amber-900 font-semibold block mt-0.5">Shri Radha-Krishna Yugal Charan</span>
+          </p>
+
+          <div class="flex justify-between items-end pt-2">
+            <span class="font-mono text-sm sm:text-base font-bold text-amber-950">🦚 <span id="chequeAmountDisplay">0</span> Japa</span>
+            <span class="text-[11px] border-t border-amber-900/50 pt-0.5 font-heading" id="chequeSignature">Devotee</span>
+          </div>
+        </div>
+        <button onclick="window.print()" class="py-2 px-5 gold-foil text-amber-950 font-bold rounded-xl text-xs shadow" data-i18n="btn_print_cheque">
+          🖨️ Print Offering Note
+        </button>
+      </div>
+
+    </div>
+
+    <!-- -------------------------------------------------------- -->
+    <!-- TAB 4: साधना डायरी (SADHANA DIARY SCREEN) -->
+    <!-- -------------------------------------------------------- -->
+    <div id="screen-passbook" class="app-screen space-y-3 hidden">
+      
+      <div class="grid grid-cols-2 gap-1.5 card-glass p-1 rounded-2xl text-xs shadow">
+        <button onclick="switchPassbookView('ledger')" id="btnPassbookLedger" class="py-2 px-1 rounded-xl font-semibold text-center bg-amber-500/20 text-amber-200 border border-amber-500/40 transition" data-i18n="btn_view_ledger">
+          📜 Sadhana Diary
+        </button>
+        <button onclick="switchPassbookView('calendar')" id="btnPassbookCalendar" class="py-2 px-1 rounded-xl text-amber-300/80 hover:bg-amber-900/30 text-center transition" data-i18n="btn_view_calendar">
+          📅 Sadhana Calendar
+        </button>
+      </div>
+
+      <!-- लेजर व्यू (Sadhana Diary Ledger) -->
+      <div id="passbookLedgerView" class="space-y-2">
+        <div class="card-glass rounded-2xl p-3 border border-amber-500/30 flex justify-between items-center">
+          <div>
+            <h3 class="font-heading text-sm text-amber-300 tracking-wide" data-i18n="ledger_heading">Sadhana Diary Record</h3>
+            <p class="text-[10px] text-amber-200/60" data-i18n="ledger_sub">Unbroken divine sadhana ledger</p>
+          </div>
+          <button onclick="fetchFreshDashboardData()" class="px-2.5 py-1 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 rounded-lg text-xs text-amber-300 flex items-center gap-1">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> <span data-i18n="btn_refresh">Refresh</span>
+          </button>
+        </div>
+
+        <div id="ledgerCardContainer" class="space-y-2 max-h-[64vh] overflow-y-auto pr-0.5"></div>
+      </div>
+
+      <!-- नित्य-नियम साधना पंचांग व्यू -->
+      <div id="passbookCalendarView" class="space-y-3 hidden">
+        <div class="grid grid-cols-3 gap-1.5">
+          <div class="card-glass rounded-2xl p-2 text-center border-l-2 border-orange-400">
+            <span class="text-[9px] uppercase font-bold text-orange-300 block" data-i18n="cal_streak_title">🔥 UNBROKEN STREAK</span>
+            <span id="calCurrentStreak" class="text-sm font-black font-mono text-amber-200">0 Days</span>
+          </div>
+          <div class="card-glass rounded-2xl p-2 text-center border-l-2 border-emerald-400">
+            <span class="text-[9px] uppercase font-bold text-emerald-300 block" data-i18n="cal_completed_title">🟢 GOAL COMPLETE</span>
+            <span id="calCompletedDays" class="text-sm font-black font-mono text-emerald-300">0 Days</span>
+          </div>
+          <div class="card-glass rounded-2xl p-2 text-center border-l-2 border-rose-500">
+            <span class="text-[9px] uppercase font-bold text-rose-300 block" data-i18n="cal_missed_title">🔴 MISSED DAYS</span>
+            <span id="calMissedDays" class="text-sm font-black font-mono text-rose-300">0 Days</span>
+          </div>
+        </div>
+
+        <div class="card-glass rounded-2xl p-3 border border-amber-500/40 shadow-xl space-y-2.5">
+          <div class="flex items-center justify-between border-b border-amber-800/40 pb-2">
+            <button onclick="changeCalendarMonth(-1)" class="w-7 h-7 rounded-xl bg-amber-950/90 border border-amber-600/40 text-amber-300 flex items-center justify-center text-xs active:scale-95 transition">
+              <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            </button>
+            <div class="text-center">
+              <h4 id="calendarMonthTitle" class="font-heading text-sm text-amber-300 tracking-wide">Month</h4>
+              <span class="text-[9px] text-amber-200/60 font-mono">Sadhana Calendar</span>
+            </div>
+            <button onclick="changeCalendarMonth(1)" class="w-7 h-7 rounded-xl bg-amber-950/90 border border-amber-600/40 text-amber-300 flex items-center justify-center text-xs active:scale-95 transition">
+              <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- 🎯 द्विभाषी दिनों के नाम -->
+          <div id="calendarWeekdaysGrid" class="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-amber-400/80">
+            <span class="text-rose-400">Sun</span>
+            <span>Mon</span>
+            <span>Tue</span>
+            <span>Wed</span>
+            <span>Thu</span>
+            <span>Fri</span>
+            <span>Sat</span>
+          </div>
+
+          <div id="calendarDaysGrid" class="grid grid-cols-7 gap-1 text-center font-mono text-xs"></div>
+
+          <div class="pt-2 border-t border-amber-800/30 flex flex-wrap items-center justify-between text-[9px] text-amber-200/80 font-sans">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> <span data-i18n="legend_complete">Complete</span></span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> <span data-i18n="legend_partial">Partial</span></span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500"></span> <span data-i18n="legend_missed">Missed</span></span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-900/60"></span> <span data-i18n="legend_remaining">Upcoming</span></span>
+          </div>
+        </div>
+
+        <div id="calendarDayDetailCard" class="card-glass-subtle rounded-2xl p-3 border border-cyan-500/40 shadow text-xs space-y-1">
+          <div class="flex justify-between items-center border-b border-amber-800/30 pb-1">
+            <span id="calDetailDate" class="font-bold text-amber-200">Today's Sadhana</span>
+            <span id="calDetailBadge" class="text-[9px] px-2 py-0.2 rounded-full font-bold bg-emerald-950 border border-emerald-500/50 text-emerald-300">
+              Active
+            </span>
+          </div>
+          <div class="flex justify-between items-center pt-0.5">
+            <span class="text-amber-300/80 text-[11px]">Accumulated Japa:</span>
+            <span id="calDetailCount" class="font-mono font-bold text-amber-200">0 Japa (0 Mala)</span>
+          </div>
+          <p id="calDetailNote" class="text-[9.5px] text-amber-300/70 italic">Click on any date to inspect details.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- -------------------------------------------------------- -->
+    <!-- TAB 5: साधक प्रोफ़ाइल स्क्रीन (PROFILE SCREEN) -->
+    <!-- -------------------------------------------------------- -->
+    <div id="screen-profile" class="app-screen space-y-3 hidden">
+      
+      <div class="card-glass rounded-2xl p-4 border border-amber-400/40 space-y-4">
+        
+        <!-- शीर्ष हेडर व वापस (Back to Mala) बटन -->
+        <div class="flex items-center justify-between border-b border-amber-800/40 pb-2">
+          <button onclick="switchAppTab('mala')" class="px-2.5 py-1 rounded-lg bg-amber-950/80 border border-amber-600/40 text-amber-300 text-xs flex items-center gap-1 active:scale-95 transition">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            <span data-i18n="btn_back">Back</span>
+          </button>
+          <h3 class="font-heading text-sm text-amber-300 tracking-wide" data-i18n="prof_screen_title">Devotee Profile</h3>
+          <div class="w-10"></div>
+        </div>
+
+        <div class="text-center pb-2 border-b border-amber-800/40">
+          <!-- 📷 गोल फ़ोटो व कैमरा आइकॉन -->
+          <div class="relative w-16 h-16 mx-auto mb-2">
+            <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-amber-400 shadow-lg flex items-center justify-center bg-amber-950">
+              <img id="profileScreenAvatarImg" src="logo.png" alt="Profile Avatar" class="w-full h-full object-cover" />
+            </div>
+            <!-- कैमरा बटन -->
+            <button onclick="triggerPhotoSelect()" type="button" title="Change Photo" class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full gold-foil text-amber-950 flex items-center justify-center shadow-lg border border-amber-200 active:scale-90 transition">
+              <i data-lucide="camera" class="w-3.5 h-3.5 stroke-[2.5]"></i>
+            </button>
+            <input type="file" id="userPhotoInput" accept="image/*" class="hidden" onchange="handleProfilePhotoUpload(event)" />
+          </div>
+
+          <h3 class="font-heading text-base text-amber-300 tracking-wide" id="profHeadName">Devotee</h3>
+          <p class="text-[11px] text-amber-200/70 font-mono" id="profHeadAcc">A/C: 108-XXXXXX</p>
+          <span class="text-[9px] text-amber-400/60 block mt-0.5" data-i18n="prof_change_photo_hint">📷 Tap camera to change photo</span>
+        </div>
+
+        <div id="profileAuthPrompt" class="p-3 bg-amber-950/70 rounded-xl border border-amber-500/40 text-center space-y-2 hidden">
+          <p class="text-xs text-amber-200" data-i18n="prof_not_logged_in">You are not logged in yet!</p>
+          <div class="flex gap-2">
+            <button onclick="openAuthModal('login')" class="flex-1 py-2 gold-foil text-amber-950 font-bold rounded-lg text-xs shadow" data-i18n="tab_login">Login</button>
+            <button onclick="openAuthModal('signup')" class="flex-1 py-2 bg-amber-900 border border-amber-500/40 text-amber-200 font-bold rounded-lg text-xs" data-i18n="tab_signup">New Account</button>
+          </div>
+        </div>
+
+        <!-- अकाउंट व पिन विवरण -->
+        <div id="profileDetailsBox" class="space-y-3">
+          <div class="bg-amber-950/70 rounded-xl p-3 border border-amber-600/30 flex justify-between items-center text-xs font-mono">
+            <div>
+              <span class="text-amber-400/70 text-[9px] block" data-i18n="card_ac_no">Account Number (A/C)</span>
+              <span class="text-amber-200 font-bold" id="profAccNo">108-XXXXXX</span>
+            </div>
+            <div class="text-right">
+              <span class="text-amber-400/70 text-[9px] block" data-i18n="label_pin_input">Security MPIN</span>
+              <span class="text-emerald-400 font-bold tracking-widest" id="profPin">••••</span>
+            </div>
+          </div>
+
+          <!-- प्रोफ़ाइल संपादन फॉर्म -->
+          <form id="editProfileForm" onsubmit="saveProfileChanges(event)" class="space-y-3 text-xs font-sans">
+            <div>
+              <label class="block text-amber-300 font-semibold mb-1" data-i18n="prof_label_name">Devotee Name / Surname</label>
+              <input type="text" id="editNameInput" class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-3 py-2 text-xs text-amber-100 outline-none focus:border-amber-400" />
+            </div>
+
+            <div>
+              <label class="block text-amber-300 font-semibold mb-1" data-i18n="prof_label_isht">Ishtadev (Deity)</label>
+              <select id="editIshtSelect" class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-2.5 py-2 text-xs text-amber-100 outline-none focus:border-amber-400">
+                <option value="श्री राधा नाम">Shri Radha Naam (श्री राधा नाम)</option>
+                <option value="हरे कृष्ण महामंत्र">Hare Krishna Mahamantra (हरे कृष्ण महामंत्र)</option>
+                <option value="श्री सीताराम नाम">Shri Sitaram Naam (श्री सीताराम नाम)</option>
+                <option value="ॐ नमः शिवाय">Om Namah Shivaya (ॐ नमः शिवाय)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-amber-300 font-semibold mb-1" data-i18n="prof_label_phone">Contact Mobile (Optional)</label>
+              <input type="tel" id="editPhoneInput" maxlength="15" class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-3 py-2 text-xs font-mono text-amber-100 outline-none focus:border-amber-400" />
+            </div>
+
+            <div>
+              <label class="block text-amber-300 font-semibold mb-1" data-i18n="prof_label_country">Country</label>
+              <select id="editCountrySelect" onchange="onCountryChange()" class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-2.5 py-2 text-xs text-amber-100 outline-none focus:border-amber-400"></select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-amber-300 font-semibold mb-1" data-i18n="prof_label_state">State / Province</label>
+                <select id="editStateSelect" onchange="onStateChange()" class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-2 py-2 text-xs text-amber-100 outline-none focus:border-amber-400"></select>
+              </div>
+              <div>
+                <label class="block text-amber-300 font-semibold mb-1" data-i18n="prof_label_city">City / Town</label>
+                <select id="editCitySelect" onchange="onCityChange()" class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-2 py-2 text-xs text-amber-100 outline-none focus:border-amber-400"></select>
+              </div>
+            </div>
+
+            <div id="customCityContainer" class="hidden">
+              <label class="block text-amber-300 font-semibold mb-1">Other City / Village</label>
+              <input type="text" id="editCustomCityInput" class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-3 py-2 text-xs text-amber-100" />
+            </div>
+
+            <button type="submit" id="saveProfileBtn" class="w-full py-3 gold-foil text-amber-950 font-bold rounded-xl text-xs shadow-lg active:scale-95 transition" data-i18n="btn_save_details">
+              ✓ Save Details
+            </button>
+          </form>
+
+          <div class="pt-2 border-t border-amber-900/40 flex justify-between items-center text-xs">
+            <span class="text-amber-400/60" data-i18n="logout_prompt">End active session?</span>
+            <button onclick="logoutUser()" class="text-rose-400 hover:text-rose-300 font-semibold underline" data-i18n="btn_logout">
+              Logout
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- 3. नीचे का 4-टैब नेविगेशन बार (ENHANCED & BIGGER BOTTOM DOCK) -->
+  <!-- ======================================================== -->
+  <nav id="appBottomNav" class="fixed bottom-0 left-0 right-0 z-50 card-glass border-t border-amber-600/40 px-3 pt-2 pb-2.5 shadow-2xl">
+    <div class="max-w-md mx-auto grid grid-cols-4 gap-2 text-center items-center">
+      
+      <!-- 1. जप माला -->
+      <button onclick="switchAppTab('mala')" id="nav-btn-mala" class="flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl text-amber-400 transition active:scale-95">
+        <span class="text-xl sm:text-2xl leading-none filter drop-shadow">📿</span>
+        <span class="text-[11.5px] sm:text-xs font-bold mt-1 tracking-tight" data-i18n="nav_mala">Japa Mala</span>
+      </button>
+
+      <!-- 2. मेरी साधना (नाम धन A/c) -->
+      <button onclick="switchAppTab('account')" id="nav-btn-account" class="flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl text-amber-300/60 hover:text-amber-200 transition active:scale-95">
+        <i data-lucide="sparkles" class="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]"></i>
+        <span class="text-[11.5px] sm:text-xs font-semibold mt-1 tracking-tight" data-i18n="nav_account">My Sadhana</span>
+      </button>
+
+      <!-- 3. प्रभु सेवा -->
+      <button onclick="switchAppTab('services')" id="nav-btn-services" class="flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl text-amber-300/60 hover:text-amber-200 transition active:scale-95">
+        <i data-lucide="heart-handshake" class="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]"></i>
+        <span class="text-[11.5px] sm:text-xs font-semibold mt-1 tracking-tight" data-i18n="nav_services">Seva</span>
+      </button>
+
+      <!-- 4. साधना डायरी -->
+      <button onclick="switchAppTab('passbook')" id="nav-btn-passbook" class="flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl text-amber-300/60 hover:text-amber-200 transition active:scale-95">
+        <i data-lucide="book-marked" class="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]"></i>
+        <span class="text-[11.5px] sm:text-xs font-semibold mt-1 tracking-tight" data-i18n="nav_passbook">Sadhana Diary</span>
+      </button>
+
+    </div>
+  </nav>
+
+  <!-- ======================================================== -->
+  <!-- 🌟 दाहिना साइडबार (RIGHT SIDEBAR & BACKDROP OVERLAY) -->
+  <!-- ======================================================== -->
+  <div id="sidebarBackdrop" onclick="closeRightSidebar()"></div>
+
+  <aside id="rightSidebar">
+    
+    <div class="space-y-2.5">
+      
+      <div class="flex items-center justify-between border-b border-amber-800/40 pb-2">
+        <h3 class="font-heading text-sm text-amber-300 tracking-wide" data-i18n="sidebar_title">Menu & Settings</h3>
+        <button onclick="closeRightSidebar()" class="w-7 h-7 rounded-full bg-amber-950/80 border border-amber-600/40 text-amber-300 flex items-center justify-center active:scale-90">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- 1. प्रोफाइल कार्ड -->
+      <div onclick="sidebarGoTo('profile')" class="sidebar-box flex items-center justify-between cursor-pointer hover:border-amber-400 transition">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-9 h-9 rounded-full border border-amber-400 overflow-hidden flex items-center justify-center bg-amber-950 flex-shrink-0">
+            <img id="sidebarAvatarImg" src="logo.png" alt="Profile" class="w-full h-full object-cover" />
+          </div>
+          <div class="min-w-0">
+            <h4 class="font-heading text-xs text-amber-200 truncate tracking-wide" id="sidebarUserName" data-i18n="sidebar_user_guest">Guest Devotee</h4>
+            <p class="text-[9.5px] text-amber-400/80 font-mono" id="sidebarUserAcc" data-i18n="sidebar_ac_guest">A/C: Not Logged In</p>
+          </div>
+        </div>
+        <i data-lucide="chevron-right" class="w-4 h-4 text-amber-300"></i>
+      </div>
+
+      <!-- 2. भाषा बदलने का विकल्प -->
+      <div onclick="toggleLanguage();" class="sidebar-box flex items-center justify-between cursor-pointer hover:border-amber-400 transition">
+        <div class="flex items-center gap-2">
+          <i data-lucide="languages" class="w-4 h-4 text-amber-300"></i>
+          <span class="text-xs font-semibold" data-i18n="sidebar_lang_label">Language / भाषा</span>
+        </div>
+        <span id="sidebarLangText" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-950 border border-amber-600/40 text-amber-300">
+          🇬🇧 English
+        </span>
+      </div>
+
+      <!-- 3. थीम बदलना -->
+      <div onclick="toggleTheme(); updateSidebarContent();" class="sidebar-box flex items-center justify-between cursor-pointer hover:border-amber-400 transition">
+        <div class="flex items-center gap-2">
+          <i data-lucide="sun" class="w-4 h-4 text-amber-300"></i>
+          <span class="text-xs font-semibold" data-i18n="sidebar_theme_label">App Theme</span>
+        </div>
+        <span id="sidebarThemeText" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950 border border-amber-600/40 text-amber-300">
+          Dark Mode
+        </span>
+      </div>
+
+      <!-- 4. नोटीफिकेशन ऑप्शन -->
+      <div onclick="requestNotificationPermission(); updateSidebarContent();" class="sidebar-box flex items-center justify-between cursor-pointer hover:border-amber-400 transition">
+        <div class="flex items-center gap-2">
+          <i data-lucide="bell" class="w-4 h-4 text-amber-300"></i>
+          <span class="text-xs font-semibold" data-i18n="sidebar_notif_label">Push Notifications</span>
+        </div>
+        <span id="sidebarNotifText" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950 border border-amber-600/40 text-amber-300">
+          Enable 🔔
+        </span>
+      </div>
+
+      <!-- 5. सेटिंग्स -->
+      <div class="pt-1">
+        <span class="text-[9.5px] font-bold text-amber-400/70 uppercase tracking-wider block mb-1" data-i18n="sidebar_settings_heading">SETTINGS</span>
+        
+        <div class="sidebar-box space-y-2 text-xs">
+          <div class="flex items-center justify-between py-1 border-b border-amber-800/30">
+            <div class="flex items-center gap-2">
+              <i data-lucide="volume-2" class="w-3.5 h-3.5 text-amber-300"></i>
+              <span data-i18n="sidebar_sound_label">Japa Chime Sound</span>
+            </div>
+            <button onclick="toggleSound(); updateSidebarContent();" id="sidebarSoundStatus" class="px-2 py-0.5 rounded bg-amber-950 border border-amber-600/40 text-[10px] text-amber-300 font-bold">
+              ON
+            </button>
+          </div>
+
+          <div class="flex items-center justify-between py-1 border-b border-amber-800/30">
+            <div class="flex items-center gap-2">
+              <i data-lucide="vibrate" class="w-3.5 h-3.5 text-amber-300"></i>
+              <span data-i18n="sidebar_vib_label">Bead Vibration</span>
+            </div>
+            <button onclick="toggleVibrate(); updateSidebarContent();" id="sidebarVibStatus" class="px-2 py-0.5 rounded bg-amber-950 border border-amber-600/40 text-[10px] text-amber-300 font-bold">
+              ON
+            </button>
+          </div>
+
+          <div onclick="showBluetoothInfo();" class="flex items-center justify-between py-1 cursor-pointer">
+            <div class="flex items-center gap-2">
+              <i data-lucide="bluetooth" class="w-3.5 h-3.5 text-cyan-300"></i>
+              <span data-i18n="sidebar_bt_label">Bluetooth Remote</span>
+            </div>
+            <span class="text-[10px] text-cyan-300 underline" data-i18n="sidebar_guide_btn">Guide ➔</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- नीचे का भाग (Login / Logout) -->
+    <div class="pt-3 border-t border-amber-800/40">
+      <div id="sidebarAuthAction"></div>
+      <p class="text-[8.5px] text-center text-amber-400/50 font-mono mt-2" data-i18n="sidebar_footer_version">
+        Bhajan Marg Bank PWA • v2.4.0 • Shri Hari Sharanam
+      </p>
+    </div>
+
+  </aside>
+
+  <!-- ======================================================== -->
+  <!-- 4. इन-ऐप लॉगिन एवं 3-स्टेप साइन अप मोडल (AUTH MODAL) -->
+  <!-- ======================================================== -->
+  <div id="authModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="card-glass rounded-3xl max-w-sm w-full p-5 border-2 border-amber-500/50 shadow-2xl relative my-6 space-y-4">
+      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-amber-400/60 hover:text-amber-200">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="text-center pb-2 border-b border-amber-800/40">
+        <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-amber-400 mx-auto mb-1 shadow-lg flex items-center justify-center bg-amber-950">
+          <img src="logo.png" alt="Login Logo" class="w-full h-full object-cover" />
+        </div>
+        <h3 class="font-heading text-base text-amber-300 tracking-wide" id="authModalTitle" data-i18n="auth_title">Devotee Sacred Login</h3>
+        <p class="text-[10px] text-amber-200/70" data-i18n="auth_sub">Eternal divine Japa management & account protection</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-1.5 p-1 bg-amber-950/80 rounded-xl border border-amber-700/40 text-xs">
+        <button onclick="setAuthMode('login')" id="btnAuthTabLogin" class="py-1.5 rounded-lg font-bold gold-foil text-amber-950" data-i18n="tab_login">Login</button>
+        <button onclick="setAuthMode('signup')" id="btnAuthTabSignup" class="py-1.5 rounded-lg font-semibold text-amber-300/80" data-i18n="tab_signup">New Account</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <form id="loginForm" onsubmit="handleUserLogin(event)" class="space-y-3 text-xs font-sans">
+        <div>
+          <label class="block text-amber-300 font-semibold mb-1" data-i18n="label_ac_input">Account Number (A/C No)</label>
+          <input type="text" id="loginAccInput" placeholder="e.g. 108-786108" required class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-3 py-2 text-xs font-mono text-amber-100 outline-none focus:border-amber-400" />
+        </div>
+        <div>
+          <label class="block text-amber-300 font-semibold mb-1" data-i18n="label_pin_input">Security MPIN (4 Digits)</label>
+          <input type="password" id="loginPinInput" placeholder="••••" maxlength="4" required class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-3 py-2 text-xs font-mono text-amber-100 text-center tracking-widest outline-none focus:border-amber-400" />
+        </div>
+        <button type="submit" id="loginSubmitBtn" class="w-full py-2.5 gold-foil text-amber-950 font-bold rounded-xl text-xs shadow-lg active:scale-95 transition" data-i18n="btn_login_submit">
+          Enter (Login) ➔
+        </button>
+      </form>
+
+      <!-- SIGNUP FLOW -->
+      <div id="signupFlowContainer" class="hidden text-xs font-sans max-h-[68vh] overflow-y-auto pr-1">
+        <div id="signupStep1" class="space-y-2.5">
+          <div class="flex items-center justify-between text-[11px] font-bold text-amber-400 border-b border-amber-800/40 pb-1">
+            <span data-i18n="signup_step1_title">Step 1/3: Personal Details</span>
+            <span class="font-mono text-cyan-300">33%</span>
+          </div>
+          <div>
+            <label class="block text-amber-300 font-semibold mb-0.5">Devotee Full Name *</label>
+            <input type="text" id="signupNameInput" placeholder="e.g. Meera Sharma" required class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-3 py-1.5 text-xs text-amber-100 outline-none focus:border-amber-400" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-amber-300 font-semibold mb-0.5">Gender *</label>
+              <select id="signupGenderSelect" class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-2 py-1.5 text-xs text-amber-100 outline-none focus:border-amber-400">
+                <option value="महिला">Female</option>
+                <option value="पुरुष">Male</option>
+                <option value="अन्य">Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-amber-300 font-semibold mb-0.5">Daily Mala Goal *</label>
+              <select id="signupTargetSelect" class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-2 py-1.5 text-xs text-amber-100 outline-none focus:border-amber-400">
+                <option value="16">16 Mala (Daily Niyam)</option>
+                <option value="32">32 Mala</option>
+                <option value="64">64 Mala</option>
+                <option value="108">108 Mala (Maha-Sankalp)</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-amber-300 font-semibold mb-0.5">Isht Mahamantra *</label>
+            <select id="signupIshtSelect" onchange="toggleSignupCustomMantra(this.value)" class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-2 py-1.5 text-xs text-amber-100 outline-none focus:border-amber-400">
+              <option value="श्री राधा नाम">Shri Radha Naam (श्री राधा नाम)</option>
+              <option value="हरे कृष्ण महामंत्र">Hare Krishna Mahamantra (हरे कृष्ण महामंत्र)</option>
+              <option value="श्री सीताराम नाम">Shri Sitaram Naam (श्री सीताराम नाम)</option>
+              <option value="ॐ नमः शिवाय">Om Namah Shivaya (ॐ नमः शिवाय)</option>
+              <option value="CUSTOM">Custom Mantra (Type here)</option>
+            </select>
+            <div id="signupCustomMantraContainer" class="hidden mt-1.5">
+              <input type="text" id="signupCustomMantraInput" placeholder="Enter custom mantra here..." class="w-full bg-amber-950/90 border border-cyan-500/50 rounded-xl px-3 py-1.5 text-xs text-amber-100 outline-none focus:border-cyan-400" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-amber-300 font-semibold mb-0.5">Mobile Number *</label>
+            <input type="tel" id="signupPhoneInput" placeholder="10 Digits" pattern="[0-9]{10}" maxlength="10" required class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-3 py-1.5 text-xs font-mono text-amber-100 outline-none focus:border-amber-400" />
+          </div>
+          <div>
+            <label class="block text-amber-300 font-semibold mb-0.5">New Security MPIN (4 Digits) *</label>
+            <input type="password" id="signupPinInput" placeholder="••••" maxlength="4" required class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-3 py-1.5 text-xs font-mono text-center tracking-widest text-amber-100 outline-none focus:border-amber-400" />
+          </div>
+          <button type="button" onclick="goToSignupStep2()" class="w-full py-2.5 gold-foil text-amber-950 font-bold rounded-xl text-xs shadow-lg active:scale-95 transition mt-2">
+            Proceed: 11 Divine Invocations (Japa) ➔
+          </button>
+        </div>
+
+        <div id="signupStep2" class="space-y-3 hidden text-center py-1">
+          <div class="flex items-center justify-between text-[11px] font-bold text-amber-400 border-b border-amber-800/40 pb-1">
+            <span data-i18n="signup_step2_title">Step 2/3: 11 Divine Invocations (Japa)</span>
+            <span class="font-mono text-cyan-300">66%</span>
+          </div>
+          <p class="text-[11px] text-amber-200/90 leading-relaxed">
+            Please tap the sacred bead <strong class="text-amber-300">11 times</strong> with devotion:
+          </p>
+          <div class="py-2">
+            <button type="button" id="signupBlessingBtn" onclick="handleSignupBlessingTap()" class="w-24 h-24 rounded-full gold-foil text-amber-950 font-black text-2xl mx-auto flex flex-col items-center justify-center shadow-2xl border-4 border-amber-200 active:scale-90 transition">
+              <span id="signupBlessingCountDisplay">0</span>
+              <span class="text-[9px] font-bold uppercase text-amber-950/80">/ 11 Japa</span>
+            </button>
+          </div>
+          <p id="signupBlessingPrompt" class="text-[11px] text-amber-300 font-semibold">
+            Tap bead 11 times to complete holy Japa...
+          </p>
+          <button type="button" id="step2NextBtn" disabled onclick="goToSignupStep3()" class="w-full py-2.5 bg-amber-950/90 border border-amber-600/40 text-amber-400 font-bold rounded-xl text-xs transition disabled:opacity-40">
+            Holy Japa Complete ➔ Final Step (₹5 Seva)
+          </button>
+        </div>
+
+        <div id="signupStep3" class="space-y-3 hidden text-center py-1">
+          <div class="flex items-center justify-between text-[11px] font-bold text-amber-400 border-b border-amber-800/40 pb-1">
+            <span data-i18n="signup_step3_title">Step 3/3: Server Maintenance Support</span>
+            <span class="font-mono text-emerald-400">100%</span>
+          </div>
+          <div class="card-glass-subtle p-3 rounded-2xl border border-amber-500/50 space-y-1.5">
+            <span class="text-2xl">🏛️</span>
+            <h4 class="font-bold text-amber-300 text-xs">Lifetime Sacred Account Protection</h4>
+            <p class="text-[10px] text-amber-200/80 leading-relaxed">
+              Annual seva contribution for cloud backup, ledger security and Bhakti Meter computing:
+            </p>
+            <div class="text-2xl font-black font-mono text-amber-200 py-0.5">₹5.00</div>
+            <p class="text-[9px] text-emerald-400 font-bold">✓ Secured by Razorpay Payment Gateway</p>
+          </div>
+          <button type="button" onclick="triggerRazorpaySignupPayment()" class="w-full py-3 gold-foil text-amber-950 font-bold rounded-xl text-xs shadow-xl active:scale-95 transition flex items-center justify-center gap-1.5">
+            <i data-lucide="shield-check" class="w-4 h-4 text-amber-950"></i>
+            <span>Dedicate ₹5 Seva & Activate Account</span>
+          </button>
+          <button type="button" onclick="activateAccountDirectlyFromApp(false)" class="text-[9.5px] text-amber-400/80 underline block mx-auto pt-0.5">
+            (Test Mode / Open without payment)
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 5. विस्तृत भक्ति मीटर (BHAKTI METER) मोडल -->
+  <!-- ======================================================== -->
+  <div id="cibilModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="card-glass rounded-3xl max-w-md w-full p-5 border-2 border-cyan-400/60 shadow-2xl relative my-6 space-y-4 text-center max-h-[92vh] overflow-y-auto">
+      <button onclick="closeCibilModal()" class="absolute top-4 right-4 text-amber-400/60 hover:text-amber-200">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div id="cibilLoadingState" class="py-8 space-y-4">
+        <div class="w-16 h-16 rounded-full border-4 border-cyan-500/30 border-t-cyan-400 animate-spin mx-auto"></div>
+        <div>
+          <h4 class="font-heading text-base sm:text-lg text-cyan-300 tracking-wide">Analyzing Sadhana Discipline...</h4>
+          <p class="text-xs text-amber-200/70 mt-1">Evaluating daily discipline, Brahmamuhurta, sankalp and seva</p>
+        </div>
+        <div class="w-48 bg-amber-950/80 rounded-full h-2 mx-auto overflow-hidden border border-amber-600/40">
+          <div id="cibilGenProgressBar" class="h-full bg-cyan-400 transition-all duration-300" style="width: 15%"></div>
+        </div>
+        <span id="cibilGenPercentText" class="text-xs font-mono text-cyan-300">15%</span>
+      </div>
+
+      <div id="cibilResultState" class="space-y-3.5 hidden text-left font-sans">
+        <div class="text-center pb-2 border-b border-amber-800/40">
+          <span class="text-[9.5px] font-mono tracking-widest text-cyan-400 font-bold uppercase">Official Bhakti Score Rating</span>
+          <h3 class="font-heading text-lg text-amber-200 mt-0.5 tracking-wide">Bhakti Meter Score Report</h3>
+          <p class="text-[10px] text-amber-200/60 font-mono" id="cibilReportDate">Issued Date: --/--/----</p>
+        </div>
+
+        <div class="py-1 text-center">
+          <div class="w-32 h-32 mx-auto rounded-full p-2.5 shadow-2xl flex items-center justify-center gauge-glow" id="cibilMeterBorder" style="background: conic-gradient(#06b6d4 0%, rgba(212, 163, 55, 0.15) 0%);">
+            <div class="w-full h-full rounded-full bg-amber-950/95 flex flex-col items-center justify-center border-2 border-cyan-400/40">
+              <span class="text-[8.5px] font-mono text-cyan-300/80 uppercase font-bold tracking-wider">BHAKTI METER</span>
+              <span id="cibilBigScore" class="text-3xl font-black font-mono text-cyan-300">820</span>
+              <span class="text-[8.5px] font-mono text-amber-400/70">300 - 900</span>
+            </div>
+          </div>
+          <div class="mt-2">
+            <span id="cibilBigGrade" class="px-3 py-1 rounded-full text-xs font-medium gold-foil text-amber-950 shadow">
+              🌟 Paramhans Grade Devotee
+            </span>
+          </div>
+        </div>
+
+        <div class="space-y-2.5 bg-amber-950/70 p-3.5 rounded-2xl border border-amber-600/30 text-xs">
+          <h4 class="font-bold text-amber-300 text-xs flex items-center gap-1">
+            <span>📋</span> 4 Core Pillars of Sadhana:
+          </h4>
+          <div>
+            <div class="flex justify-between text-[11px] text-amber-200/80 mb-0.5">
+              <span>1. Total Accumulated Japa:</span>
+              <span id="cibilF1Text" class="font-mono text-emerald-400 font-bold">Excellent (+195)</span>
+            </div>
+            <div class="w-full bg-amber-900/60 rounded-full h-1.5 overflow-hidden">
+              <div id="cibilF1Bar" class="h-full bg-emerald-400" style="width: 90%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between text-[11px] text-amber-200/80 mb-0.5">
+              <span>2. Brahmamuhurta & Daily Niyam:</span>
+              <span id="cibilF2Text" class="font-mono text-cyan-300 font-bold">Active (+140)</span>
+            </div>
+            <div class="w-full bg-amber-900/60 rounded-full h-1.5 overflow-hidden">
+              <div id="cibilF2Bar" class="h-full bg-cyan-400" style="width: 85%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between text-[11px] text-amber-200/80 mb-0.5">
+              <span>3. Maha-Sankalp Completion:</span>
+              <span id="cibilF3Text" class="font-mono text-yellow-300 font-bold">In Progress (+110)</span>
+            </div>
+            <div class="w-full bg-amber-900/60 rounded-full h-1.5 overflow-hidden">
+              <div id="cibilF3Bar" class="h-full bg-yellow-400" style="width: 75%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between text-[11px] text-amber-200/80 mb-0.5">
+              <span>4. Divine Wealth Dedication (Seva):</span>
+              <span id="cibilF4Text" class="font-mono text-rose-300 font-bold">Active (+95)</span>
+            </div>
+            <div class="w-full bg-amber-900/60 rounded-full h-1.5 overflow-hidden">
+              <div id="cibilF4Bar" class="h-full bg-rose-400" style="width: 80%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 bg-cyan-950/80 border border-cyan-500/40 rounded-xl text-xs space-y-1">
+          <p class="font-bold text-cyan-300 flex items-center gap-1 text-[11px]">
+            <span>💡</span> Sadhana Guide (To Reach 900 Score):
+          </p>
+          <p class="text-[10px] text-amber-100 font-normal leading-relaxed" id="cibilAdviceText">
+            Perform Japa during Brahmamuhurta (04:00 - 06:00 AM) and offer regular Japa into your Maha-Sankalp.
+          </p>
+        </div>
+
+        <div class="flex gap-2 pt-1">
+          <button onclick="triggerCheckCibilScore(true)" class="flex-1 py-2.5 px-3 bg-amber-950/80 border border-amber-600/40 hover:bg-amber-900 text-amber-300 font-semibold rounded-xl text-xs flex items-center justify-center gap-1 transition">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>Recheck</span>
+          </button>
+          <button onclick="closeCibilModal()" class="flex-1 py-2.5 px-3 gold-foil text-amber-950 font-bold rounded-xl text-xs shadow">
+            Understood
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 6. महा-संकल्प (MAHA-SANKALP) कस्टम मोडल -->
+  <!-- ======================================================== -->
+  <div id="goalModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="card-glass rounded-3xl max-w-sm w-full p-5 border-2 border-orange-500/50 space-y-3.5 my-6 text-xs font-sans">
+      <div class="text-center pb-2 border-b border-amber-800/40">
+        <h3 class="font-heading text-base text-orange-300 tracking-wide">🏛️ Establish Maha-Sankalp</h3>
+        <p class="text-[10px] text-amber-200/70">Long-term spiritual target with divine rewards</p>
+      </div>
+
+      <form id="customGoalForm" onsubmit="saveCustomGoal(event)" class="space-y-3">
+        <div>
+          <label class="block text-amber-300 font-semibold mb-1">Sankalp Name *</label>
+          <input type="text" id="customGoalTitleInput" placeholder="e.g. 1 Lakh Shri Radha Naam" required class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-3 py-2 text-xs text-amber-100 outline-none focus:border-amber-400" />
+        </div>
+
+        <div>
+          <label class="block text-amber-300 font-semibold mb-1">Mantra Selection *</label>
+          <select id="customGoalMantraSelect" onchange="toggleGoalCustomMantra(this.value)" class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-2.5 py-2 text-xs text-amber-100 outline-none focus:border-amber-400">
+            <option value="ALL">All Names</option>
+            <option value="श्री राधा नाम">Shri Radha Naam</option>
+            <option value="हरे कृष्ण महामंत्र">Hare Krishna Mahamantra</option>
+            <option value="श्री सीताराम नाम">Shri Sitaram Naam</option>
+            <option value="ॐ नमः शिवाय">Om Namah Shivaya</option>
+            <option value="CUSTOM">Custom Mantra</option>
+          </select>
+          <div id="goalCustomMantraContainer" class="hidden mt-1.5">
+            <input type="text" id="goalCustomMantraInput" placeholder="Enter custom mantra name..." class="w-full bg-amber-950/90 border border-cyan-500/50 rounded-xl px-3 py-1.5 text-xs text-amber-100 outline-none focus:border-cyan-400" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-amber-300 font-semibold mb-1">Target Count & Unit *</label>
+          <div class="grid grid-cols-3 gap-2">
+            <div class="col-span-2">
+              <input type="number" id="customGoalCountInput" placeholder="e.g. 100000" min="10" required class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-3 py-2 text-xs font-mono font-bold text-amber-100 outline-none focus:border-amber-400" />
+            </div>
+            <div>
+              <select id="customGoalUnitSelect" class="w-full bg-amber-950/80 border border-amber-600/40 rounded-xl px-2 py-2 text-xs text-amber-200 font-bold outline-none focus:border-amber-400">
+                <option value="JAPS">Japa</option>
+                <option value="MALAS">Malas</option>
+              </select>
+            </div>
+          </div>
+          <span class="text-[9px] text-amber-400/70 block mt-1">💡 1 Mala = 108 Japa multiplied automatically.</span>
+        </div>
+
+        <div class="p-2.5 bg-amber-950/60 rounded-xl border border-orange-500/30 text-[10px] text-amber-200/80 space-y-0.5">
+          <p class="font-bold text-orange-300">✨ Divine Dividend Rule:</p>
+          <p>Japa offered during Brahmamuhurta earns 1.25x spiritual fruits.</p>
+        </div>
+
+        <div class="flex gap-2 pt-1">
+          <button type="button" onclick="closeChangeGoalModal()" class="flex-1 py-2.5 bg-amber-950/80 border border-amber-600/40 text-amber-300 font-bold rounded-xl text-xs active:scale-95 transition">
+            Cancel
+          </button>
+          <button type="submit" class="flex-1 py-2.5 gold-foil text-amber-950 font-bold rounded-xl text-xs shadow-lg active:scale-95 transition">
+            Establish Sankalp
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 7. संकटमोचन कृपा सहायता (KRIPA SAHAYATA) मोडल -->
+  <!-- ======================================================== -->
+  <div id="loanModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="card-glass rounded-3xl max-w-sm w-full p-5 border-2 border-rose-500/60 space-y-3.5 my-6 text-xs font-sans">
+      <div class="text-center pb-2 border-b border-rose-800/40">
+        <h3 class="font-heading text-base text-rose-300 tracking-wide">🤝 Request Kripa Sahayata</h3>
+        <p class="text-[10px] text-amber-200/70">Advance divine grace aid from Thakurji's Grace Fund</p>
+      </div>
+
+      <form id="kripaLoanForm" onsubmit="handleApplyKripaLoan(event)" class="space-y-3">
+        <div>
+          <label class="block text-rose-300 font-semibold mb-1">Purpose *</label>
+          <select id="loanPurposeSelect" class="w-full bg-amber-950/80 border border-rose-600/40 rounded-xl px-2.5 py-2 text-xs text-amber-100 outline-none focus:border-rose-400">
+            <option value="माता-पिता व स्वजन स्वास्थ्य लाभार्थ">For Parents & Family Wellbeing</option>
+            <option value="आकस्मिक संकट, भय व रोग निवारणार्थ">Crisis, Fear & Disease Protection</option>
+            <option value="परीक्षा / कार्य सफलता व मानसिक शांति">Exam / Success & Peace of Mind</option>
+            <option value="पितरों की सद्गति व शांति हेतु">Ancestors' Peace & Liberation</option>
+            <option value="विश्व शांति एवं गौ सेवा कल्याणार्थ">World Peace & Cow Protection</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-rose-300 font-semibold mb-1">Desired Grace Amount *</label>
+          <select id="loanAmountSelect" onchange="toggleLoanCustomAmount(this.value)" class="w-full bg-amber-950/80 border border-rose-600/40 rounded-xl px-2.5 py-2 text-xs font-mono font-bold text-amber-100 outline-none focus:border-rose-400">
+            <option value="5000">5,000 Names (Minor crisis)</option>
+            <option value="11000" selected>11,000 Names (Grace protection)</option>
+            <option value="21000">21,000 Names (Special blessing)</option>
+            <option value="CUSTOM">Custom Count</option>
+          </select>
+          <div id="loanCustomAmountBox" class="hidden mt-1.5">
+            <input type="number" id="loanCustomAmountInput" placeholder="e.g. 25000" min="1000" class="w-full bg-amber-950/90 border border-rose-500/50 rounded-xl px-3 py-1.5 text-xs font-mono text-amber-100 outline-none focus:border-rose-400" />
+          </div>
+        </div>
+
+        <div class="p-2.5 bg-rose-950/60 rounded-xl border border-rose-500/30 text-[10px] text-amber-200/80 space-y-1">
+          <p class="font-bold text-rose-300">📜 Devotional Guidelines:</p>
+          <p>• Once approved, this divine grace is immediately dedicated to your chosen cause.</p>
+          <p>• Offer Thakurji daily gratitude Japa of 1 Mala (108 names) regularly.</p>
+          <p class="text-emerald-400 font-bold">• Daily gratitude Japa boosts Bhakti Meter to 850+!</p>
+        </div>
+
+        <div class="flex gap-2 pt-1">
+          <button type="button" onclick="closeLoanModal()" class="flex-1 py-2.5 bg-amber-950/80 border border-amber-600/40 text-amber-300 font-bold rounded-xl text-xs active:scale-95 transition">
+            Cancel
+          </button>
+          <button type="submit" class="flex-1 py-2.5 bg-rose-800 hover:bg-rose-700 text-amber-100 font-bold rounded-xl text-xs shadow-lg active:scale-95 transition">
+            ✓ Accept Kripa Sahayata
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- टोस्ट नोटिफिकेशन -->
+  <div id="toastPopup" class="fixed bottom-16 left-1/2 -translate-x-1/2 bg-emerald-950 border border-emerald-500/60 text-emerald-200 px-4 py-2.5 rounded-2xl shadow-2xl text-xs flex items-center gap-2 transition-all duration-300 opacity-0 pointer-events-none z-50 max-w-[92vw]">
+    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400 flex-shrink-0" id="toastIcon"></i>
+    <span id="toastMsg" class="truncate">Holy Japa synced successfully!</span>
+  </div>
+
+  <!-- 🌟 मॉड्यूलर आर्किटेक्चर स्क्रिप्ट्स -->
+  <script src="lang.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/calendar.js"></script>
+  <script src="notifications.js"></script>
+  <script src="js/mala.js"></script>
+  <script src="js/banking.js"></script>
+  <script src="js/auth-profile.js"></script>
+  <script src="sidebar.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
